@@ -12,10 +12,10 @@ import {
   ProcessingStep,
   TranslationResult,
 } from "@/types/translation";
-import { translationService } from "@/services/translationService";
+import { translationServiceOCR } from "@/services/translationServiceOCR";
 import { ArrowRight, Stethoscope, RotateCcw } from "lucide-react";
 
-const Index = () => {
+const Index1 = () => {
   const { toast } = useToast();
   const [sourceLanguage, setSourceLanguage] = useState<Language>("en");
   const [targetLanguage, setTargetLanguage] = useState<Language>("te");
@@ -70,7 +70,7 @@ const Index = () => {
     try {
       // Step 1: OCR
       updateStep(0, "processing", "Reading text from image...");
-      const extractedText = await translationService.performOCR(
+      const extractedText = await translationServiceOCR.performOCR(
         selectedImage,
         sourceLanguage,
         targetLanguage
@@ -83,7 +83,7 @@ const Index = () => {
 
       // Step 2: Translation
       updateStep(1, "processing", "Translating text...");
-      const translatedText = await translationService.translateText(
+      const translatedText = await translationServiceOCR.translateText(
         extractedText,
         sourceLanguage,
         targetLanguage
@@ -92,7 +92,7 @@ const Index = () => {
 
       // Step 3: TTS
       updateStep(2, "processing", "Generating speech...");
-      const audioUrl = await translationService.generateSpeech(
+      const audioUrl = await translationServiceOCR.generateSpeech(
         translatedText,
         sourceLanguage,
         targetLanguage
@@ -145,7 +145,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-medical-light/30 to-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <header className="text-center mb-12">
+        {/* <header className="text-center mb-12">
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="p-3 rounded-full bg-gradient-medical">
               <Stethoscope className="w-8 h-8 text-white" />
@@ -157,7 +157,7 @@ const Index = () => {
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Convert prescription images to speech in your preferred language
           </p>
-        </header>
+        </header> */}
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Left Column - Input */}
@@ -248,4 +248,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Index1;

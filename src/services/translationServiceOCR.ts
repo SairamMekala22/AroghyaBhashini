@@ -127,4 +127,4 @@ export class TranslationService {
   }
 }
 
-export const translationService = new TranslationService();
+export const translationServiceOCR = new TranslationService();
