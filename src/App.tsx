@@ -8,11 +8,12 @@ import { UILanguageProvider } from "./contexts/UILanguageContext";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import ConversationPage from "./pages/ConversationPage";
-import PrescriptionPage from "./pages/PrescriptionPage";
+// import PrescriptionPage from "./pages/PrescriptionPage";
 import MedicationsPage from "./pages/MedicationsPage";
 import NotFound from "./pages/NotFound";
 // import Index from "./pages/Index1";
 import Index1 from "./pages/Index1";
+import Summary from "./pages/Summary";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,7 @@ const App = () => (
               <Route path="/" element={<HomePage />} />
               <Route path="/conversation" element={<ConversationPage />} />
               <Route path="/prescription" element={<Index1 />} />
-              <Route path="/medications" element={<MedicationsPage />} />
+              <Route path="/medications" element={<Summary />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
