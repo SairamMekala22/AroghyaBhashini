@@ -7,10 +7,11 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { UILanguageProvider } from "./contexts/UILanguageContext";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
-import ConversationPage from "./pages/ConversationPage";
+// import ConversationPage from "./pages/ConversationPage";
 import PrescriptionPage from "./pages/PrescriptionPage";
 import MedicationsPage from "./pages/MedicationsPage";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -25,8 +26,8 @@ const App = () => (
             <Navbar />
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/conversation" element={<ConversationPage />} />
-              <Route path="/prescription" element={<PrescriptionPage />} />
+              <Route path="/conversation" element={<Index />} />
+              {/* <Route path="/prescription" element={<PrescriptionPage />} /> */}
               <Route path="/medications" element={<MedicationsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

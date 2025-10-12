@@ -1,39 +1,35 @@
-import { languages } from '@/contexts/LanguageContext';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { Language } from '@/types/translation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Languages } from 'lucide-react';
 
 interface LanguageSelectorProps {
+  value: Language;
+  onChange: (value: Language) => void;
   label: string;
-  value: string;
-  onChange: (value: string) => void;
-  icon?: string;
+  disabled?: boolean;
 }
 
-const LanguageSelector = ({ label, value, onChange, icon }: LanguageSelectorProps) => {
+const LANGUAGES: { value: Language; label: string }[] = [
+  { value: 'en', label: 'English' },
+  { value: 'te', label: 'Telugu (తెలుగు)' },
+  { value: 'hi', label: 'Hindi (हिन्दी)' },
+];
+
+export const LanguageSelector = ({ value, onChange, label, disabled }: LanguageSelectorProps) => {
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
-        {icon && <span className="text-lg">{icon}</span>}
+      <label className="text-sm font-medium flex items-center gap-2">
+        <Languages className="w-4 h-4 text-medical-primary" />
         {label}
-      </Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full bg-card border-2 border-border hover:border-primary transition-colors">
+      </label>
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <SelectTrigger className="w-full bg-card shadow-soft border-border">
           <SelectValue placeholder="Select language" />
         </SelectTrigger>
-        <SelectContent className="bg-card border-border max-h-[300px]">
-          {languages.map((lang) => (
-            <SelectItem
-              key={lang.code}
-              value={lang.code}
-              className="cursor-pointer hover:bg-secondary"
-            >
-              {lang.name}
+        <SelectContent className="bg-popover border-border z-50">
+          {LANGUAGES.map((lang) => (
+            <SelectItem key={lang.value} value={lang.value}>
+              {lang.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -41,5 +37,3 @@ const LanguageSelector = ({ label, value, onChange, icon }: LanguageSelectorProp
     </div>
   );
 };
-
-export default LanguageSelector;
