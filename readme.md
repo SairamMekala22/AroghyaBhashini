@@ -144,10 +144,10 @@ F --> B
 | Name |
 |------|
 | **Sairam Mekala** |
-| **Ram Charan Reddy** | 
-| **Rakesh** | 
-| **Akhilesh** | 
-| **Narina Ram Charan** | 
+| **Mallu Ram Charan Reddy** | 
+| **Racharla Rakesh** | 
+| **Akhilesh Rao** | 
+| **Narina Ram Charan Teja** | 
 
 ---
 
