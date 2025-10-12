@@ -47,22 +47,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        medical: {
-          blue: "hsl(var(--medical-blue))",
-          "blue-light": "hsl(var(--medical-blue-light))",
-          "blue-dark": "hsl(var(--medical-blue-dark))",
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
         },
-        success: "hsl(var(--success-green))",
-        warning: "hsl(var(--warning-orange))",
-      },
-      backgroundImage: {
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-subtle': 'var(--gradient-subtle)',
-      },
-      boxShadow: {
-        'soft': 'var(--shadow-soft)',
-        'medium': 'var(--shadow-medium)',
-        'large': 'var(--shadow-large)',
       },
       borderRadius: {
         lg: "var(--radius)",

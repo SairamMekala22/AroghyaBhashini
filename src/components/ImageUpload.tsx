@@ -1,7 +1,6 @@
-import { useCallback, useState } from 'react';
-import { Upload, X, FileImage } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useCallback, useState } from "react";
+import { Upload, Image as ImageIcon, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ImageUploadProps {
   onImageSelect: (file: File) => void;
@@ -10,14 +9,36 @@ interface ImageUploadProps {
 
 export const ImageUpload = ({ onImageSelect, disabled }: ImageUploadProps) => {
   const [preview, setPreview] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-  const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith('image/')) {
-      return;
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
     }
+  }, []);
 
-    if (file.size > 5 * 1024 * 1024) {
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  }, []);
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  };
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
       return;
     }
 
@@ -27,107 +48,64 @@ export const ImageUpload = ({ onImageSelect, disabled }: ImageUploadProps) => {
     };
     reader.readAsDataURL(file);
     onImageSelect(file);
-  }, [onImageSelect]);
+  };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (disabled) return;
-
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFile(file);
-    }
-  }, [handleFile, disabled]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    if (!disabled) {
-      setIsDragging(true);
-    }
-  }, [disabled]);
-
-  const handleDragLeave = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFile(file);
-    }
-  }, [handleFile]);
-
-  const clearImage = useCallback(() => {
+  const clearImage = () => {
     setPreview(null);
-  }, []);
+  };
 
   return (
     <div className="w-full">
+      <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+        <ImageIcon className="w-4 h-4 text-primary" />
+        Medical Report Image
+      </label>
+      
       {!preview ? (
         <div
+          className={`relative border-2 border-dashed rounded-lg transition-all ${
+            dragActive 
+              ? "border-primary bg-secondary/50" 
+              : "border-border hover:border-primary/50 bg-card"
+          } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
           onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          className={cn(
-            "relative border-2 border-dashed rounded-xl p-8 transition-smooth",
-            "flex flex-col items-center justify-center min-h-[280px]",
-            isDragging && !disabled && "border-medical-primary bg-medical-light/50 scale-105",
-            !isDragging && "border-border hover:border-medical-primary/50",
-            disabled && "opacity-50 cursor-not-allowed"
-          )}
         >
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div className={cn(
-              "p-4 rounded-full transition-smooth",
-              isDragging ? "bg-medical-primary/10 scale-110" : "bg-muted"
-            )}>
-              <Upload className={cn(
-                "w-8 h-8 transition-smooth",
-                isDragging ? "text-medical-primary" : "text-muted-foreground"
-              )} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Upload Prescription Image</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Drag and drop your image here, or click to browse
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Supports JPG, PNG (Max 5MB)
-              </p>
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileInput}
-              disabled={disabled}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-            />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileInput}
+            disabled={disabled}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+          />
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <Upload className="w-12 h-12 text-primary mb-4" />
+            <p className="text-foreground font-medium mb-1">
+              Drop your medical report image here
+            </p>
+            <p className="text-sm text-muted-foreground">
+              or click to browse (JPG, PNG - max 5MB)
+            </p>
           </div>
         </div>
       ) : (
-        <div className="relative rounded-xl overflow-hidden shadow-soft border border-border">
+        <div className="relative rounded-lg overflow-hidden border border-border bg-card">
           <img
             src={preview}
             alt="Preview"
-            className="w-full h-auto max-h-[400px] object-contain bg-muted"
+            className="w-full h-64 object-contain bg-muted"
           />
           <Button
+            variant="destructive"
+            size="icon"
+            className="absolute top-2 right-2"
             onClick={clearImage}
             disabled={disabled}
-            size="icon"
-            variant="destructive"
-            className="absolute top-3 right-3 shadow-lg"
           >
             <X className="w-4 h-4" />
           </Button>
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-            <div className="flex items-center gap-2 text-white">
-              <FileImage className="w-4 h-4" />
-              <span className="text-sm font-medium">Prescription Image Loaded</span>
-            </div>
-          </div>
         </div>
       )}
     </div>

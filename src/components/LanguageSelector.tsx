@@ -1,45 +1,29 @@
-import { languages } from '@/contexts/LanguageContext';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Globe } from "lucide-react";
 
 interface LanguageSelectorProps {
-  label: string;
   value: string;
-  onChange: (value: string) => void;
-  icon?: string;
+  onValueChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-const LanguageSelector = ({ label, value, onChange, icon }: LanguageSelectorProps) => {
+export const LanguageSelector = ({ value, onValueChange, disabled }: LanguageSelectorProps) => {
   return (
-    <div className="space-y-2">
-      <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
-        {icon && <span className="text-lg">{icon}</span>}
-        {label}
-      </Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full bg-card border-2 border-border hover:border-primary transition-colors">
-          <SelectValue placeholder="Select language" />
+    <div className="w-full">
+      <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+        <Globe className="w-4 h-4 text-primary" />
+        Output Language
+      </label>
+      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+        <SelectTrigger className="w-full h-12 bg-card border-border hover:border-primary transition-all">
+          <SelectValue placeholder="Select output language" />
         </SelectTrigger>
-        <SelectContent className="bg-card border-border max-h-[300px]">
-          {languages.map((lang) => (
-            <SelectItem
-              key={lang.code}
-              value={lang.code}
-              className="cursor-pointer hover:bg-secondary"
-            >
-              {lang.name}
-            </SelectItem>
-          ))}
+        <SelectContent className="bg-popover border-border">
+          <SelectItem value="en" className="cursor-pointer hover:bg-secondary">English</SelectItem>
+          <SelectItem value="te" className="cursor-pointer hover:bg-secondary">Telugu (తెలుగు)</SelectItem>
+          <SelectItem value="hi" className="cursor-pointer hover:bg-secondary">Hindi (हिन्दी)</SelectItem>
         </SelectContent>
       </Select>
     </div>
   );
 };
-
-export default LanguageSelector;
