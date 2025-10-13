@@ -176,16 +176,6 @@ F --> B
 
 ---
 
-## 📜 License  
-
-```
-MIT License  
-© 2025 The Linkers — Aroghyabhashini Project Team, KMIT
-```
-
----
-
-
 ---
 
 ## 📞 Contact  
