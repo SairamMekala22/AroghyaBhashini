@@ -1,27 +1,43 @@
-import { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Volume2, Languages, User, Stethoscope } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { translateSpeechToSpeech, TranslationResult } from '@/services/translationServiceASR';
-import { toast } from 'sonner';
+import { useState, useRef, useEffect } from "react";
+import {
+  Mic,
+  MicOff,
+  Volume2,
+  Languages,
+  User,
+  Stethoscope,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  translateSpeechToSpeech,
+  TranslationResult,
+} from "@/services/translationServiceASR";
+import { toast } from "sonner";
 
 const LANGUAGES = [
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'te', name: 'Telugu', flag: '🇮🇳' },
-  { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
+  { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "te", name: "Telugu", flag: "🇮🇳" },
+  { code: "hi", name: "Hindi", flag: "🇮🇳" },
 ];
 
-type Speaker = 'doctor' | 'patient';
+type Speaker = "doctor" | "patient";
 
 export default function TranslationInterface() {
-  const [doctorLang, setDoctorLang] = useState('en');
-  const [patientLang, setPatientLang] = useState('te');
+  const [doctorLang, setDoctorLang] = useState("en");
+  const [patientLang, setPatientLang] = useState("te");
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState<Speaker | null>(null);
   const [result, setResult] = useState<TranslationResult | null>(null);
-  const [processingStage, setProcessingStage] = useState<string>('');
+  const [processingStage, setProcessingStage] = useState<string>("");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -30,68 +46,131 @@ export default function TranslationInterface() {
   useEffect(() => {
     // Create audio player
     audioPlayerRef.current = new Audio();
-    
+
     return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state === "recording"
+      ) {
         mediaRecorderRef.current.stop();
       }
     };
   }, []);
 
   const startRecording = async (speaker: Speaker) => {
+    // Ensure microphone permission is available (will request if needed)
+    const ensureMicrophonePermission = async (): Promise<boolean> => {
+      try {
+        if (navigator.permissions && (navigator.permissions as any).query) {
+          try {
+            const status = await (navigator.permissions as any).query({
+              name: "microphone",
+            });
+            if (status.state === "granted") return true;
+            if (status.state === "prompt") {
+              // Trigger the prompt by requesting a short getUserMedia stream
+              const promptStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+              });
+              promptStream.getTracks().forEach((t) => t.stop());
+              return true;
+            }
+            // state === 'denied'
+            if (typeof window !== "undefined") {
+              const open = window.confirm(
+                "Microphone access is blocked for this site. Open browser settings to allow microphone access?"
+              );
+              if (open) {
+                toast.error(
+                  "Please allow microphone access from your browser site settings and try again."
+                );
+              }
+            }
+            return false;
+          } catch (err) {
+            // Permissions API query failed, fall back to direct getUserMedia call below
+          }
+        }
+
+        // Fallback: try to getUserMedia which will prompt the user
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          fallbackStream.getTracks().forEach((t) => t.stop());
+          return true;
+        } catch (err) {
+          return false;
+        }
+      } catch (error) {
+        return false;
+      }
+    };
+
+    const permissionOk = await ensureMicrophonePermission();
+    if (!permissionOk) {
+      toast.error("Microphone permission is required to record.");
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
           sampleRate: 16000,
           echoCancellation: true,
           noiseSuppression: true,
-        }
+        },
       });
-      
+
       // Try to use the best available format
-      const options: MediaRecorderOptions = { mimeType: 'audio/webm' };
-      
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        options.mimeType = 'audio/webm;codecs=opus';
-      } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
-        options.mimeType = 'audio/ogg;codecs=opus';
+      const options: MediaRecorderOptions = { mimeType: "audio/webm" };
+
+      if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+        options.mimeType = "audio/webm;codecs=opus";
+      } else if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
+        options.mimeType = "audio/ogg;codecs=opus";
       }
-      
-      console.log('Recording with format:', options.mimeType);
-      
+
+      console.log("Recording with format:", options.mimeType);
+
       const mediaRecorder = new MediaRecorder(stream, options);
-      
+
       audioChunksRef.current = [];
-      
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
-      
+
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        stream.getTracks().forEach(track => track.stop());
-        
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+        stream.getTracks().forEach((track) => track.stop());
+
         // Process the recording
         await processAudio(audioBlob, speaker);
       };
-      
+
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecording(true);
       setActiveSpeaker(speaker);
-      
+
       toast.success(`Recording from ${speaker}...`);
     } catch (error) {
-      console.error('Error accessing microphone:', error);
-      toast.error('Could not access microphone. Please check permissions.');
+      console.error("Error accessing microphone:", error);
+      toast.error("Could not access microphone. Please check permissions.");
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
@@ -101,25 +180,25 @@ export default function TranslationInterface() {
     setIsProcessing(true);
     setResult(null);
 
-    const sourceLang = speaker === 'doctor' ? doctorLang : patientLang;
-    const targetLang = speaker === 'doctor' ? patientLang : doctorLang;
+    const sourceLang = speaker === "doctor" ? doctorLang : patientLang;
+    const targetLang = speaker === "doctor" ? patientLang : doctorLang;
 
     try {
       // Check if languages are the same
       if (sourceLang === targetLang) {
-        toast.error('Source and target languages cannot be the same');
+        toast.error("Source and target languages cannot be the same");
         setIsProcessing(false);
         return;
       }
 
-      setProcessingStage('Converting speech to text...');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setProcessingStage("Converting speech to text...");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      setProcessingStage('Translating text...');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setProcessingStage("Translating text...");
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      setProcessingStage('Generating speech...');
-      
+      setProcessingStage("Generating speech...");
+
       const translationResult = await translateSpeechToSpeech(
         audioBlob,
         sourceLang,
@@ -127,18 +206,18 @@ export default function TranslationInterface() {
       );
 
       setResult(translationResult);
-      setProcessingStage('');
-      
+      setProcessingStage("");
+
       // Play the translated audio
       if (audioPlayerRef.current && translationResult.translatedAudioUrl) {
         audioPlayerRef.current.src = translationResult.translatedAudioUrl;
         audioPlayerRef.current.play();
-        toast.success('Translation complete! Playing audio...');
+        toast.success("Translation complete! Playing audio...");
       }
     } catch (error) {
-      console.error('Translation error:', error);
-      toast.error('Translation failed. Please try again.');
-      setProcessingStage('');
+      console.error("Translation error:", error);
+      toast.error("Translation failed. Please try again.");
+      setProcessingStage("");
     } finally {
       setIsProcessing(false);
       setActiveSpeaker(null);
@@ -149,7 +228,7 @@ export default function TranslationInterface() {
     if (audioPlayerRef.current && result?.translatedAudioUrl) {
       audioPlayerRef.current.currentTime = 0;
       audioPlayerRef.current.play();
-      toast.info('Playing translated audio...');
+      toast.info("Playing translated audio...");
     }
   };
 
@@ -180,7 +259,7 @@ export default function TranslationInterface() {
                 </div>
                 <h2 className="text-xl font-semibold">Doctor</h2>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
                   Doctor's Language
@@ -203,13 +282,21 @@ export default function TranslationInterface() {
               </div>
 
               <Button
-                onClick={() => isRecording ? stopRecording() : startRecording('doctor')}
-                disabled={isProcessing || (isRecording && activeSpeaker !== 'doctor')}
+                onClick={() =>
+                  isRecording ? stopRecording() : startRecording("doctor")
+                }
+                disabled={
+                  isProcessing || (isRecording && activeSpeaker !== "doctor")
+                }
                 className="w-full h-20 text-lg font-semibold relative overflow-hidden group"
-                variant={isRecording && activeSpeaker === 'doctor' ? 'destructive' : 'default'}
+                variant={
+                  isRecording && activeSpeaker === "doctor"
+                    ? "destructive"
+                    : "default"
+                }
               >
                 <div className="flex items-center gap-3">
-                  {isRecording && activeSpeaker === 'doctor' ? (
+                  {isRecording && activeSpeaker === "doctor" ? (
                     <>
                       <MicOff className="w-6 h-6 animate-pulse" />
                       <span>Stop Recording</span>
@@ -221,7 +308,7 @@ export default function TranslationInterface() {
                     </>
                   )}
                 </div>
-                {isRecording && activeSpeaker === 'doctor' && (
+                {isRecording && activeSpeaker === "doctor" && (
                   <div className="absolute inset-0 bg-destructive/20 animate-pulse" />
                 )}
               </Button>
@@ -237,7 +324,7 @@ export default function TranslationInterface() {
                 </div>
                 <h2 className="text-xl font-semibold">Patient</h2>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
                   Patient's Language
@@ -260,13 +347,21 @@ export default function TranslationInterface() {
               </div>
 
               <Button
-                onClick={() => isRecording ? stopRecording() : startRecording('patient')}
-                disabled={isProcessing || (isRecording && activeSpeaker !== 'patient')}
+                onClick={() =>
+                  isRecording ? stopRecording() : startRecording("patient")
+                }
+                disabled={
+                  isProcessing || (isRecording && activeSpeaker !== "patient")
+                }
                 className="w-full h-20 text-lg font-semibold relative overflow-hidden"
-                variant={isRecording && activeSpeaker === 'patient' ? 'destructive' : 'default'}
+                variant={
+                  isRecording && activeSpeaker === "patient"
+                    ? "destructive"
+                    : "default"
+                }
               >
                 <div className="flex items-center gap-3">
-                  {isRecording && activeSpeaker === 'patient' ? (
+                  {isRecording && activeSpeaker === "patient" ? (
                     <>
                       <MicOff className="w-6 h-6 animate-pulse" />
                       <span>Stop Recording</span>
@@ -278,7 +373,7 @@ export default function TranslationInterface() {
                     </>
                   )}
                 </div>
-                {isRecording && activeSpeaker === 'patient' && (
+                {isRecording && activeSpeaker === "patient" && (
                   <div className="absolute inset-0 bg-destructive/20 animate-pulse" />
                 )}
               </Button>
@@ -290,9 +385,18 @@ export default function TranslationInterface() {
         {isProcessing && (
           <Card className="p-6 bg-primary/5 border-primary/20">
             <div className="flex items-center justify-center gap-3">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div
+                className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                style={{ animationDelay: "0ms" }}
+              />
+              <div
+                className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                style={{ animationDelay: "150ms" }}
+              />
+              <div
+                className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                style={{ animationDelay: "300ms" }}
+              />
               <p className="text-primary font-medium ml-2">{processingStage}</p>
             </div>
           </Card>
@@ -330,7 +434,9 @@ export default function TranslationInterface() {
                   <p className="text-sm font-medium text-muted-foreground mb-1">
                     Translated Text:
                   </p>
-                  <p className="text-foreground font-medium">{result.translatedText}</p>
+                  <p className="text-foreground font-medium">
+                    {result.translatedText}
+                  </p>
                 </div>
               </div>
             </div>
@@ -349,7 +455,9 @@ export default function TranslationInterface() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent font-bold">2.</span>
-              <span>Click the microphone button to start recording (max 20 seconds)</span>
+              <span>
+                Click the microphone button to start recording (max 20 seconds)
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent font-bold">3.</span>
