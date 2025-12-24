@@ -201,12 +201,12 @@ const LANGUAGE_CONFIGS = {
     ttsLang: 'en-IN',
   },
   'en-te': {
-    asr: 'https://canvas.iiit.ac.in/sandboxbeprod/infer_asr/67127dcbb1a6984f0c5e7d35',
+    asr: 'https://canvas.iiit.ac.in/sandboxbeprod/infer_asr/67b840e29c21bec07537674b',
     asrLang: 'en-IN',
     mt: 'https://canvas.iiit.ac.in/sandboxbeprod/check_model_status_and_infer/67b86729b5cc0eb92316389a',
     mtSource: 'en',
     mtTarget: 'te',
-    tts: 'https://canvas.iiit.ac.in/sandboxbeprod/generate_tts/67b842f39c21bec07537674e',
+    tts: 'https://canvas.iiit.ac.in/sandboxbeprod/generate_tts/67bca880e0b95a6a1ea34a91',
     ttsLang: 'te-IN',
   },
   'en-hi': {
