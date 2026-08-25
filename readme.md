@@ -181,7 +181,7 @@ F --> B
 ## 📞 Contact  
 
 **GitHub:** [SairamMekala22](https://github.com/SairamMekala22)  
-**Email:** sairam.mekala@example.com *(replace with actual email)*  
+**Email:** sairammekala7@gmail.com  
 **Project Repo:** [Aroghyabhashini](https://github.com/SairamMekala22/The_Linkers-Megathon-25)  
 
 ---
